@@ -1,0 +1,95 @@
+name: Vue_App
+description: ''
+settings:
+  build-steps:
+    - key: runner_cmd
+      name: Install dependencies
+      disabled: false
+      workDir: ''
+      args:
+        commands: pnpm install
+        continueOnError: false
+      argsProtected: {}
+    - key: runner_cmd
+      name: Run unit tests
+      disabled: false
+      workDir: ''
+      args:
+        commands: pnpm test:unit || exit 0
+        continueOnError: false
+      argsProtected: {}
+    - key: runner_cmd
+      name: Install playwright browsers
+      disabled: false
+      workDir: ''
+      args:
+        commands: pnpm exec playwright install
+        continueOnError: false
+      argsProtected: {}
+    - key: runner_cmd
+      name: Run e2e tests
+      disabled: false
+      workDir: ''
+      args:
+        commands: pnpm test:e2e || exit 0
+        continueOnError: false
+      argsProtected: {}
+    - key: runner_cmd
+      name: Build production bundle
+      disabled: false
+      workDir: ''
+      args:
+        commands: pnpm build
+        continueOnError: false
+      argsProtected: {}
+    - key: runner_cmd
+      name: Deploy and terminate (Windows)
+      disabled: true
+      workDir: ''
+      args:
+        commands: |-
+          REM Start Vue server in background, fully detached, with logs redirected
+          start "vue-server" cmd /c "pnpm serve > vue.log 2>&1"
+
+          REM Wait for 2 minutes
+          ping 127.0.0.1 -n 101 > nul
+
+          REM Kill Vue server
+          taskkill /FI "WINDOWTITLE eq vue-server" /T /F
+
+          echo Vue server stopped automatically after 2 minutes.
+        continueOnError: false
+      argsProtected: {}
+    - key: runner_cmd
+      name: Deploy and terminate (Linux)
+      disabled: false
+      workDir: ''
+      args:
+        commands: |-
+          setsid pnpm serve > vue.log 2>&1 &
+          VUE_PID=$!
+
+          # Wait for 2 minutes
+          sleep 120
+
+          # Kill the entire process group
+          kill -TERM -$VUE_PID
+          sleep 5
+          kill -KILL -$VUE_PID 2>/dev/null || true
+
+          echo "Vue server stopped automatically after 2 minutes."
+        continueOnError: false
+      argsProtected: {}
+  artifacts:
+    - name: Unit and E2E Tests Coverage
+      condition: buildSucceeds
+      paths:
+        - coverage
+    - name: E2E Test Report
+      condition: buildSucceeds
+      paths:
+        - playwright-report
+    - name: Production Build
+      condition: buildSucceeds
+      paths:
+        - dist
