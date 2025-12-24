@@ -12,7 +12,7 @@
     "dev": "vite --port 4173",
     "build": "vite build",
     "build:analyze": "cross-env ANALYZE=1 vite build && size-limit",
-    "serve": "vite preview --port 4173",
+    "serve": "vite preview --port 4173 --host 0.0.0.0",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint --fix .",
     "test": "pnpm test:unit && pnpm test:e2e && tsx scripts/merge-coverage.ts",
